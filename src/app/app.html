@@ -1,0 +1,27 @@
+<div class="app-container">
+  <nav class="main-nav">
+    <div class="nav-content">
+      <div class="nav-brand">
+        <h1 class="app-title">CASTEL Simulación</h1>
+        <span class="app-subtitle">Sistema de Gestión de Agentes</span>
+      </div>
+
+      <div class="nav-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          Dashboard
+        </a>
+        <a routerLink="/nueva-simulacion" routerLinkActive="active">
+          Nueva Simulación
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="main-footer">
+    <p>CASTEL - Sistema de Simulación de Agentes de Trading &copy; 2025</p>
+  </footer>
+</div>

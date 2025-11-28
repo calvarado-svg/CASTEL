@@ -1,0 +1,276 @@
+<div class="detalle-agente-container">
+  <header class="detalle-header">
+    <div class="header-actions">
+      <button routerLink="/dashboard" class="btn-back">← Volver al Dashboard</button>
+    </div>
+
+    <div *ngIf="detalleAgente && detalleAgente.agente" class="agente-info-principal">
+      <h1>{{ detalleAgente.agente.userId }}</h1>
+      <div class="symbol-badge">{{ detalleAgente.agente.symbol }}</div>
+      <div class="estado-badge" [ngClass]="'estado-' + detalleAgente.agente.estadoAgente.toLowerCase()">
+        {{ detalleAgente.agente.estadoAgente }}
+      </div>
+    </div>
+  </header>
+
+  <div class="hipotesis-selector">
+    <label>Hipotesis:</label>
+    <button
+      *ngFor="let h of hipotesisOpciones"
+      [class.active]="hipotesisActual === h"
+      (click)="cambiarHipotesis(h)"
+      class="btn-hipotesis"
+    >
+      Cada {{ h }} días
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando informacion del agente...</p>
+  </div>
+
+  <div *ngIf="error && !cargando" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="cargarDatos()" class="btn-retry">Reintentar</button>
+  </div>
+
+  <div *ngIf="!cargando && !error && detalleAgente" class="detalle-content">
+    <div *ngIf="detalleAgente.agente" class="stats-grid">
+      <div class="stat-card">
+        <h3>Posicion Actual</h3>
+        <p class="stat-value">
+          <span *ngIf="detalleAgente.agente.posicion">{{ detalleAgente.agente.posicion }}</span>
+          <span *ngIf="!detalleAgente.agente.posicion">N/A</span>
+        </p>
+      </div>
+
+      <div class="stat-card">
+        <h3>ROI Hipotesis</h3>
+        <p class="stat-value" [ngClass]="obtenerClaseROI(detalleAgente.agente.roiHipotesis)">
+          {{ formatearPorcentaje(detalleAgente.agente.roiHipotesis) }}
+        </p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Periodos</h3>
+        <p class="stat-value">{{ detalleAgente.periodos.length }}</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Estado</h3>
+        <p class="stat-value">{{ detalleAgente.agente.estadoAgente }}</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>ROI Ultimo Periodo</h3>
+        <p class="stat-value" [ngClass]="obtenerClaseROI(detalleAgente.agente.roiUltimoPeriodo)">
+          {{ formatearPorcentaje(detalleAgente.agente.roiUltimoPeriodo) }}
+        </p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Eventos en Historial</h3>
+        <p class="stat-value">
+          <span *ngIf="detalleAgente.historialEnTop10">{{ detalleAgente.historialEnTop10.length }}</span>
+          <span *ngIf="!detalleAgente.historialEnTop10">0</span>
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="!detalleAgente.agente" class="no-data-message">
+      <p>No se encontraron datos del agente para esta hipótesis.</p>
+    </div>
+
+    <div class="section" *ngIf="roiData">
+      <h2>Evolucion del ROI</h2>
+
+      <div class="roi-resumen">
+        <div class="resumen-item">
+          <span class="label">Total Periodos:</span>
+          <span class="value">{{ roiData.resumen.totalPeriodos }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">ROI Promedio:</span>
+          <span class="value" [ngClass]="obtenerClaseROI(roiData.resumen.roiPromedioHipotesis)">
+            {{ formatearPorcentaje(roiData.resumen.roiPromedioHipotesis) }}
+          </span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">ROI Final:</span>
+          <span class="value" [ngClass]="obtenerClaseROI(roiData.resumen.roiFinalHipotesis)">
+            {{ formatearPorcentaje(roiData.resumen.roiFinalHipotesis) }}
+          </span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Mejor Periodo:</span>
+          <span class="value">
+            #{{ roiData.resumen.mejorPeriodo.indice + 1 }} ({{ formatearPorcentaje(roiData.resumen.mejorPeriodo.roi) }})
+          </span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Peor Periodo:</span>
+          <span class="value">
+            #{{ roiData.resumen.peorPeriodo.indice + 1 }} ({{ formatearPorcentaje(roiData.resumen.peorPeriodo.roi) }})
+          </span>
+        </div>
+      </div>
+
+      <table class="periodos-table">
+        <thead>
+          <tr>
+            <th>Periodo</th>
+            <th>Fechas</th>
+            <th>Dias</th>
+            <th>Balance Inicial</th>
+            <th>Close PnL</th>
+            <th>ROI</th>
+            <th>Trades</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let periodo of roiData.periodos">
+            <td>{{ periodo.indice + 1 }}</td>
+            <td>{{ formatearFecha(periodo.fechaInicio) }} - {{ formatearFecha(periodo.fechaFin) }}</td>
+            <td>{{ periodo.diasEnPeriodo }}</td>
+            <td>{{ formatearMoneda(periodo.balanceInicial) }}</td>
+            <td [ngClass]="obtenerClaseROI(periodo.closePnlHipotesis)">
+              {{ formatearMoneda(periodo.closePnlHipotesis) }}
+            </td>
+            <td [ngClass]="obtenerClaseROI(periodo.roiHipotesis)">
+              {{ formatearPorcentaje(periodo.roiHipotesis) }}
+            </td>
+            <td>{{ periodo.cantidadTrades }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section" *ngIf="detalleAgente.historialEnTop10 && detalleAgente.historialEnTop10.length > 0">
+      <h2>Historial de Eventos ({{ detalleAgente.historialEnTop10.length }})</h2>
+
+      <table class="eventos-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Evento</th>
+            <th>Posicion</th>
+            <th>Regla Violada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let evento of detalleAgente.historialEnTop10.slice(0, 10)">
+            <td>{{ formatearFecha(evento.fecha) }}</td>
+            <td>{{ evento.evento }}</td>
+            <td>
+              <span *ngIf="evento.posicion">{{ evento.posicion }}</span>
+              <span *ngIf="evento.posicionAnterior && evento.posicionNueva">
+                {{ evento.posicionAnterior }} → {{ evento.posicionNueva }}
+              </span>
+              <span *ngIf="!evento.posicion && !evento.posicionAnterior">-</span>
+            </td>
+            <td>
+              <span *ngIf="evento.reglaViolada">{{ evento.reglaViolada }}</span>
+              <span *ngIf="!evento.reglaViolada">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p *ngIf="detalleAgente.historialEnTop10.length > 10" class="mostrar-mas-info">
+        Mostrando 10 de {{ detalleAgente.historialEnTop10.length }} eventos
+      </p>
+    </div>
+
+    <div class="section" *ngIf="historialMatrimonios">
+      <h2>Historial de Matrimonios</h2>
+
+      <div class="matrimonios-resumen">
+        <div class="resumen-item">
+          <span class="label">Matrimonios Actuales:</span>
+          <span class="value">{{ historialMatrimonios.resumen.totalMatrimoniosActuales }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Divorcios:</span>
+          <span class="value">{{ historialMatrimonios.resumen.totalDivorcios }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">ROI Total Generado:</span>
+          <span class="value" [ngClass]="obtenerClaseROI(historialMatrimonios.resumen.roiTotalGenerado)">
+            {{ formatearPorcentaje(historialMatrimonios.resumen.roiTotalGenerado) }}
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="historialMatrimonios.matrimoniosActuales.length > 0" class="matrimonios-actuales">
+        <h3>Cuentas Actualmente Casadas ({{ historialMatrimonios.matrimoniosActuales.length }})</h3>
+        <table class="matrimonios-table">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Fecha Matrimonio</th>
+              <th>Balance al Casarse</th>
+              <th>Balance Actual</th>
+              <th>ROI con este Agente</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of historialMatrimonios.matrimoniosActuales.slice(0, 10)">
+              <td>{{ m.cuenta_id }}</td>
+              <td>{{ formatearFecha(m.fechaMatrimonio) }}</td>
+              <td>{{ formatearMoneda(m.balanceAlCasarse) }}</td>
+              <td>{{ formatearMoneda(m.balanceActual) }}</td>
+              <td [ngClass]="obtenerClaseROI(m.roiConEsteAgente)">
+                {{ formatearPorcentaje(m.roiConEsteAgente) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="historialMatrimonios.matrimoniosActuales.length > 10" class="mostrar-mas-info">
+          Mostrando 10 de {{ historialMatrimonios.matrimoniosActuales.length }} matrimonios actuales
+        </p>
+      </div>
+
+      <div *ngIf="historialMatrimonios.matrimoniosHistoricos.length > 0" class="matrimonios-historicos">
+        <h3>Divorcios Anteriores ({{ historialMatrimonios.matrimoniosHistoricos.length }})</h3>
+        <table class="matrimonios-table divorcios">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Fecha Matrimonio</th>
+              <th>Fecha Divorcio</th>
+              <th>Motivo</th>
+              <th>Balance Casarse</th>
+              <th>Balance Divorcio</th>
+              <th>ROI Generado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of historialMatrimonios.matrimoniosHistoricos.slice(0, 10)">
+              <td>{{ m.cuenta_id }}</td>
+              <td>{{ formatearFecha(m.fechaMatrimonio) }}</td>
+              <td>{{ formatearFecha(m.fechaDivorcio) }}</td>
+              <td>
+                <span class="motivo-badge" [ngClass]="m.motivoDivorcio === 'EXPULSION_TOP10' ? 'expulsion' : 'manual'">
+                  {{ m.motivoDivorcio === 'EXPULSION_TOP10' ? 'Expulsión' : 'Manual' }}
+                </span>
+              </td>
+              <td>{{ formatearMoneda(m.balanceAlCasarse) }}</td>
+              <td>{{ formatearMoneda(m.balanceAlDivorciarse) }}</td>
+              <td [ngClass]="obtenerClaseROI(m.roiGenerado)">
+                {{ formatearPorcentaje(m.roiGenerado) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="historialMatrimonios.matrimoniosHistoricos.length > 10" class="mostrar-mas-info">
+          Mostrando 10 de {{ historialMatrimonios.matrimoniosHistoricos.length }} divorcios
+        </p>
+      </div>
+
+      <div *ngIf="historialMatrimonios.matrimoniosActuales.length === 0 && historialMatrimonios.matrimoniosHistoricos.length === 0" class="no-matrimonios">
+        <p>Este agente no tiene historial de matrimonios.</p>
+      </div>
+    </div>
+  </div>
+</div>

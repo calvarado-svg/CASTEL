@@ -1,0 +1,265 @@
+<div class="nueva-simulacion-container">
+  <header class="page-header">
+    <h1>Nueva Simulación</h1>
+    <p class="subtitle">Configura y ejecuta una nueva simulación de agentes</p>
+  </header>
+
+  <!-- Formulario -->
+  <div *ngIf="!resultado" class="formulario-container">
+    <form (ngSubmit)="ejecutarSimulacion()" #simulacionForm="ngForm">
+
+      <!-- Hipótesis -->
+      <div class="form-group">
+        <label for="hipotesis">Hipótesis de Evaluación</label>
+        <select
+          id="hipotesis"
+          name="hipotesis"
+          [(ngModel)]="hipotesis"
+          [disabled]="ejecutando"
+          class="form-control"
+          required
+        >
+          <option *ngFor="let h of hipotesisOpciones" [value]="h">
+            Cada {{ h }} días
+          </option>
+        </select>
+        <p class="help-text">Selecciona la hipótesis de evaluación (períodos de 3, 5, 7, 10 o 15 días)</p>
+      </div>
+
+      <!-- Días -->
+      <div class="form-group">
+        <label for="dias">Días de Simulación</label>
+        <input
+          type="number"
+          id="dias"
+          name="dias"
+          [(ngModel)]="dias"
+          (change)="calcularFechaFin()"
+          [disabled]="ejecutando"
+          class="form-control"
+          min="1"
+          max="365"
+          required
+        />
+        <p class="help-text">Número de días a simular (1-365)</p>
+      </div>
+
+      <!-- Fecha Inicio -->
+      <div class="form-group">
+        <label for="fechaInicio">Fecha de Inicio</label>
+        <input
+          type="date"
+          id="fechaInicio"
+          name="fechaInicio"
+          [(ngModel)]="fechaInicio"
+          (change)="calcularFechaFin()"
+          [disabled]="ejecutando"
+          class="form-control"
+          required
+        />
+      </div>
+
+      <!-- Fecha Fin -->
+      <div class="form-group">
+        <label for="fechaFin">Fecha de Fin</label>
+        <input
+          type="date"
+          id="fechaFin"
+          name="fechaFin"
+          [(ngModel)]="fechaFin"
+          [disabled]="ejecutando"
+          class="form-control"
+          required
+        />
+        <p class="help-text">
+          Se calculó automáticamente según los días especificados
+        </p>
+      </div>
+
+      <!-- Información de limpieza automática -->
+      <div class="form-group info-group">
+        <div class="info-banner">
+          <strong>ℹ️ Limpieza Automática:</strong>
+          <p>
+            Al iniciar la simulación, se limpiarán automáticamente todos los datos anteriores
+            (cuentas, snapshots e historial) de la hipótesis seleccionada para garantizar
+            resultados precisos.
+          </p>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="error-message">
+        <p>{{ error }}</p>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <button
+          type="button"
+          (click)="volverAlDashboard()"
+          class="btn-secondary"
+          [disabled]="ejecutando"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          (click)="resetearFormulario()"
+          class="btn-secondary"
+          [disabled]="ejecutando"
+        >
+          Resetear
+        </button>
+
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="ejecutando || !simulacionForm.valid"
+        >
+          <span *ngIf="!ejecutando">Ejecutar Simulación</span>
+          <span *ngIf="ejecutando">Ejecutando...</span>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="ejecutando" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Ejecutando simulación, por favor espera...</p>
+        <p class="small">Esto puede tomar varios minutos dependiendo de los días configurados</p>
+        <div class="progress-info" *ngIf="mensajeProgreso">
+          <p class="progress-message">{{ mensajeProgreso }}</p>
+        </div>
+      </div>
+    </form>
+
+    <!-- Información -->
+    <div class="info-panel">
+      <h3>Información de la Simulación</h3>
+      <ul>
+        <li><strong>Hipótesis:</strong> Define cada cuántos días se evalúa el ROI de los agentes (3, 5, 7, 10 o 15 días por período)</li>
+        <li><strong>Días:</strong> Cantidad de días que se simularán</li>
+        <li><strong>Fechas:</strong> Rango de fechas históricas para tomar datos de PnL</li>
+        <li><strong>Proceso:</strong>
+          <ol>
+            <li>Se calcula el TOP 10 inicial</li>
+            <li>Se crean 1000 cuentas y se asignan 100 a cada agente del TOP 10</li>
+            <li>Día a día se recalcula el TOP 10, se detectan cambios y se ejecutan divorcios</li>
+            <li>Se actualizan los balances de todas las cuentas</li>
+            <li>Al final se genera un reporte completo con estadísticas</li>
+          </ol>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Notificación de éxito -->
+  <div *ngIf="mostrarNotificacion" class="notificacion-exito" (click)="cerrarNotificacion()">
+    <div class="notificacion-content">
+      <div class="notificacion-icon">✓</div>
+      <div class="notificacion-texto">
+        <strong>Simulación Completada</strong>
+        <span>La simulación se ha ejecutado exitosamente</span>
+      </div>
+      <button class="notificacion-close">×</button>
+    </div>
+  </div>
+
+  <!-- Resultado -->
+  <div *ngIf="resultado" class="resultado-container">
+    <div class="success-header">
+      <div class="success-icon">✓</div>
+      <h2>Simulación Completada Exitosamente</h2>
+      <p>ID: {{ resultado.simulacionId }}</p>
+    </div>
+
+    <!-- Resumen Principal -->
+    <div class="resultado-grid">
+      <div class="resultado-card">
+        <h3>Configuración</h3>
+        <div class="resultado-item">
+          <span class="label">Hipótesis:</span>
+          <span class="value">TOP {{ resultado.hipotesis }}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Días Simulados:</span>
+          <span class="value">{{ resultado.diasSimulados }}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Período:</span>
+          <span class="value">{{ resultado.fechas.inicio }} - {{ resultado.fechas.fin }}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Tiempo de Ejecución:</span>
+          <span class="value">{{ resultado.tiempoEjecucion }}</span>
+        </div>
+      </div>
+
+      <div class="resultado-card">
+        <h3>Resultados Financieros</h3>
+        <div class="resultado-item">
+          <span class="label">Balance Inicial:</span>
+          <span class="value">{{ formatearMoneda(resultado.resumenFinal.balanceInicial) }}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Balance Final:</span>
+          <span class="value positivo">
+            {{ formatearMoneda(resultado.resumenFinal.balanceFinal) }}
+          </span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">ROI Global:</span>
+          <span class="value positivo">
+            {{ formatearPorcentaje(resultado.resumenFinal.roiGlobal) }}
+          </span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Ganancia Total:</span>
+          <span class="value positivo">
+            {{ formatearMoneda(resultado.resumenFinal.gananciaTotal) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="resultado-card">
+        <h3>Estadísticas</h3>
+        <div class="resultado-item">
+          <span class="label">Total Divorcios:</span>
+          <span class="value">{{ resultado.estadisticas.totalDivorcios }}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Cambios en TOP10:</span>
+          <span class="value">{{ resultado.estadisticas.cambiosEnTop10 }}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Mejor Día:</span>
+          <span class="value">
+            Día {{ resultado.estadisticas.mejorDia.dia }} -
+            {{ formatearPorcentaje(resultado.estadisticas.mejorDia.roiDelDia) }}
+          </span>
+        </div>
+        <div class="resultado-item">
+          <span class="label">Peor Día:</span>
+          <span class="value">
+            Día {{ resultado.estadisticas.peorDia.dia }} -
+            {{ formatearPorcentaje(resultado.estadisticas.peorDia.roiDelDia) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="resultado-actions">
+      <button (click)="verDetalles()" class="btn-primary">
+        Ver Detalles Completos
+      </button>
+      <button (click)="resultado = null" class="btn-secondary">
+        Nueva Simulación
+      </button>
+      <button (click)="volverAlDashboard()" class="btn-secondary">
+        Volver al Dashboard
+      </button>
+    </div>
+  </div>
+</div>

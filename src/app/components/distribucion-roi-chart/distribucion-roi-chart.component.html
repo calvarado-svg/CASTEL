@@ -1,0 +1,105 @@
+<div class="distribucion-roi-container">
+  <div class="section-header">
+    <h2>Distribución de Cuentas por ROI</h2>
+    <p class="subtitle" *ngIf="distribucion">
+      {{ formatearNumero(distribucion.totalCuentas) }} cuentas |
+      AUM Total: {{ formatearMoneda(distribucion.totalAum) }}
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="cargando" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando distribución...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !cargando" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="cargarDistribucion()" class="btn-retry">Reintentar</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!cargando && !error && allBuckets.length === 0" class="empty-state">
+    <p>No hay datos de distribución disponibles.</p>
+  </div>
+
+  <!-- Chart -->
+  <div *ngIf="!cargando && !error && allBuckets.length > 0" class="chart-wrapper">
+    <!-- Header de la tabla -->
+    <div class="chart-header">
+      <div class="col-roi">ROI</div>
+      <div class="col-bar">Distribución</div>
+      <div class="col-cuentas"># Cuentas</div>
+      <div class="col-aum">AUM</div>
+    </div>
+
+    <!-- Filas del gráfico -->
+    <div class="chart-rows">
+      <div
+        *ngFor="let bucket of allBuckets"
+        class="chart-row"
+        [class.positivo]="bucket.rangoMin >= 0"
+        [class.negativo]="bucket.rangoMin < 0"
+        [class.empty]="bucket.cantidadCuentas === 0"
+      >
+        <!-- Columna ROI Label -->
+        <div class="col-roi">
+          <span class="roi-label" [class]="obtenerClaseRoi(bucket.rangoMin)">
+            {{ bucket.rangoLabel }}
+          </span>
+        </div>
+
+        <!-- Columna Barra -->
+        <div class="col-bar">
+          <div class="bar-container">
+            <div
+              class="bar"
+              [class]="obtenerClaseRoi(bucket.rangoMin)"
+              [style.width.%]="obtenerAnchoBarra(bucket.cantidadCuentas)"
+              *ngIf="bucket.cantidadCuentas > 0"
+            >
+              <span class="bar-percentage" *ngIf="bucket.porcentajeCuentas >= 5">
+                {{ bucket.porcentajeCuentas.toFixed(1) }}%
+              </span>
+            </div>
+            <span class="bar-percentage-outside" *ngIf="bucket.porcentajeCuentas < 5 && bucket.porcentajeCuentas > 0">
+              {{ bucket.porcentajeCuentas.toFixed(1) }}%
+            </span>
+            <span class="empty-indicator" *ngIf="bucket.cantidadCuentas === 0">-</span>
+          </div>
+        </div>
+
+        <!-- Columna Cantidad de Cuentas -->
+        <div class="col-cuentas">
+          <span class="cuentas-value" [class.zero]="bucket.cantidadCuentas === 0">
+            {{ bucket.cantidadCuentas === 0 ? '0' : formatearNumero(bucket.cantidadCuentas) }}
+          </span>
+        </div>
+
+        <!-- Columna AUM -->
+        <div class="col-aum">
+          <span class="aum-value" [class.zero]="bucket.aum === 0">
+            {{ bucket.aum === 0 ? '$0' : formatearMoneda(bucket.aum) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer con totales -->
+    <div class="chart-footer">
+      <div class="col-roi">
+        <strong>TOTAL</strong>
+      </div>
+      <div class="col-bar">
+        <div class="total-bar"></div>
+      </div>
+      <div class="col-cuentas">
+        <strong>{{ formatearNumero(distribucion?.totalCuentas || 0) }}</strong>
+      </div>
+      <div class="col-aum">
+        <strong>{{ formatearMoneda(distribucion?.totalAum || 0) }}</strong>
+      </div>
+    </div>
+  </div>
+</div>

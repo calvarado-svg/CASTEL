@@ -1,0 +1,541 @@
+/* ====================================
+   Detalle Agente - Tema CXP Oscuro
+   ==================================== */
+
+.detalle-agente-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.detalle-header {
+  margin-bottom: 2rem;
+
+  .header-actions {
+    margin-bottom: 1rem;
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--cxp-text-primary);
+      border: 1px solid var(--cxp-border);
+      padding: 0.5rem 1rem;
+      border-radius: var(--cxp-radius-md);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--cxp-primary);
+      }
+    }
+  }
+
+  .agente-info-principal {
+    background: var(--cxp-bg-card);
+    border: 1px solid var(--cxp-border);
+    padding: 2rem;
+    border-radius: var(--cxp-radius-lg);
+    box-shadow: var(--cxp-shadow-md);
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--cxp-text-primary);
+      margin-bottom: 1rem;
+      background: var(--cxp-gradient-purple);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .symbol-badge {
+      display: inline-block;
+      background: var(--cxp-gradient-purple);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--cxp-radius-md);
+      font-weight: 600;
+      margin-right: 0.5rem;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .estado-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: var(--cxp-radius-md);
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+
+      &.estado-activo {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--cxp-success-light);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      &.estado-en_espera {
+        background: rgba(245, 158, 11, 0.2);
+        color: var(--cxp-warning-light);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+
+      &.estado-expulsado {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--cxp-error-light);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      &.estado-no_esta {
+        background: rgba(113, 113, 122, 0.2);
+        color: var(--cxp-text-muted);
+        border: 1px solid rgba(113, 113, 122, 0.3);
+      }
+    }
+  }
+}
+
+.hipotesis-selector {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--cxp-bg-card);
+  border: 1px solid var(--cxp-border);
+  border-radius: var(--cxp-radius-lg);
+
+  label {
+    font-weight: 600;
+    color: var(--cxp-text-primary);
+  }
+
+  .btn-hipotesis {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--cxp-border);
+    background: var(--cxp-bg-elevated);
+    border-radius: var(--cxp-radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--cxp-text-secondary);
+
+    &:hover {
+      border-color: var(--cxp-primary);
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--cxp-text-primary);
+    }
+
+    &.active {
+      background: var(--cxp-gradient-purple);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+
+  .spinner {
+    border: 4px solid var(--cxp-border);
+    border-top: 4px solid var(--cxp-primary);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+
+  p {
+    color: var(--cxp-text-muted);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--cxp-radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+
+  p {
+    color: var(--cxp-error-light);
+    margin-bottom: 1rem;
+  }
+
+  .btn-retry {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--cxp-radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    }
+  }
+}
+
+.detalle-content {
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .stat-card {
+      background: var(--cxp-bg-card);
+      border: 1px solid var(--cxp-border);
+      padding: 1.5rem;
+      border-radius: var(--cxp-radius-lg);
+      box-shadow: var(--cxp-shadow-sm);
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: var(--cxp-primary);
+        box-shadow: var(--cxp-shadow-glow);
+      }
+
+      h3 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--cxp-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--cxp-text-primary);
+
+        &.positivo {
+          color: var(--cxp-success-light);
+        }
+
+        &.negativo {
+          color: var(--cxp-error-light);
+        }
+      }
+    }
+  }
+
+  .section {
+    background: var(--cxp-bg-card);
+    border: 1px solid var(--cxp-border);
+    padding: 2rem;
+    border-radius: var(--cxp-radius-lg);
+    box-shadow: var(--cxp-shadow-md);
+    margin-bottom: 2rem;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--cxp-primary-light);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--cxp-border);
+    }
+  }
+
+  .roi-resumen, .cuentas-resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--cxp-bg-elevated);
+    border: 1px solid var(--cxp-border);
+    border-radius: var(--cxp-radius-md);
+
+    .resumen-item {
+      .label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--cxp-text-muted);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .value {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--cxp-text-primary);
+
+        &.positivo {
+          color: var(--cxp-success-light);
+        }
+
+        &.negativo {
+          color: var(--cxp-error-light);
+        }
+      }
+    }
+  }
+
+  .periodos-table, .cuentas-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+
+    thead {
+      background: rgba(99, 102, 241, 0.1);
+
+      th {
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--cxp-text-secondary);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--cxp-border);
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid var(--cxp-border);
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.05);
+        }
+
+        td {
+          padding: 0.75rem;
+          color: var(--cxp-text-secondary);
+          font-size: 0.875rem;
+
+          &.positivo {
+            color: var(--cxp-success-light);
+            font-weight: 600;
+          }
+
+          &.negativo {
+            color: var(--cxp-error-light);
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  .eventos-lista {
+    .evento-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background: var(--cxp-bg-elevated);
+      border: 1px solid var(--cxp-border);
+      border-radius: var(--cxp-radius-md);
+      border-left: 4px solid var(--cxp-primary);
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--cxp-primary);
+        box-shadow: var(--cxp-shadow-sm);
+      }
+
+      .evento-tipo {
+        font-weight: 600;
+        color: var(--cxp-primary-light);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        min-width: 150px;
+      }
+
+      .evento-fecha {
+        color: var(--cxp-text-muted);
+        font-size: 0.875rem;
+        min-width: 150px;
+      }
+
+      .evento-razon {
+        color: var(--cxp-text-secondary);
+        font-size: 0.875rem;
+        flex: 1;
+      }
+    }
+  }
+
+  .mostrar-mas-info {
+    text-align: center;
+    color: var(--cxp-text-muted);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+  }
+
+  .matrimonios-resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--cxp-bg-elevated);
+    border: 1px solid var(--cxp-border);
+    border-radius: var(--cxp-radius-md);
+
+    .resumen-item {
+      .label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--cxp-text-muted);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .value {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--cxp-text-primary);
+
+        &.positivo {
+          color: var(--cxp-success-light);
+        }
+
+        &.negativo {
+          color: var(--cxp-error-light);
+        }
+      }
+    }
+  }
+
+  .matrimonios-actuales, .matrimonios-historicos {
+    margin-top: 1.5rem;
+
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--cxp-text-primary);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--cxp-border);
+    }
+  }
+
+  .matrimonios-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+
+    thead {
+      background: rgba(99, 102, 241, 0.1);
+
+      th {
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--cxp-text-secondary);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--cxp-border);
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid var(--cxp-border);
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.05);
+        }
+
+        td {
+          padding: 0.75rem;
+          color: var(--cxp-text-secondary);
+          font-size: 0.875rem;
+
+          &.positivo {
+            color: var(--cxp-success-light);
+            font-weight: 600;
+          }
+
+          &.negativo {
+            color: var(--cxp-error-light);
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    &.divorcios {
+      thead {
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      tbody tr:hover {
+        background: rgba(239, 68, 68, 0.05);
+      }
+    }
+  }
+
+  .motivo-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--cxp-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+
+    &.expulsion {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--cxp-error-light);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    &.manual {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--cxp-primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+  }
+
+  .no-matrimonios {
+    text-align: center;
+    padding: 2rem;
+    color: var(--cxp-text-muted);
+    background: var(--cxp-bg-elevated);
+    border: 1px solid var(--cxp-border);
+    border-radius: var(--cxp-radius-md);
+  }
+}

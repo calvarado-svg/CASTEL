@@ -1,0 +1,197 @@
+<div class="timeline-calendario-container">
+  <!-- Header Compacto -->
+  <div class="header-compact">
+    <div class="title-section">
+      <h1>Timeline Calendario</h1>
+      <span class="badge-hipotesis">{{ hipotesisActual }} días</span>
+    </div>
+    <div class="actions-compact">
+      <button
+        class="btn btn-sm btn-primary"
+        (click)="generarTimeline()"
+        [disabled]="generando || cargando"
+      >
+        {{ generando ? 'Generando...' : 'Generar' }}
+      </button>
+      <button class="btn btn-sm btn-secondary" (click)="cargarTimelines()" [disabled]="cargando">
+        Recargar
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros Compactos -->
+  <div class="filters-compact" *ngIf="timelines.length > 0">
+    <div class="filter-row">
+      <div class="filter-group">
+        <span class="filter-label">Estado:</span>
+        <div class="filter-buttons">
+          <button [class.active]="filtroEstado === 'TODOS'" (click)="filtroEstado = 'TODOS'">Todos</button>
+          <button [class.active]="filtroEstado === 'ACTIVO'" (click)="filtroEstado = 'ACTIVO'">Activos</button>
+          <button [class.active]="filtroEstado === 'EN_ESPERA'" (click)="filtroEstado = 'EN_ESPERA'">Espera</button>
+          <button [class.active]="filtroEstado === 'EXPULSADO'" (click)="filtroEstado = 'EXPULSADO'">Expulsados</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">TOP10:</span>
+        <div class="filter-buttons">
+          <button [class.active]="filtroTop10 === 'TODOS'" (click)="filtroTop10 = 'TODOS'">Todos</button>
+          <button [class.active]="filtroTop10 === 'TOP10'" (click)="filtroTop10 = 'TOP10'">TOP10</button>
+          <button [class.active]="filtroTop10 === 'NO_TOP10'" (click)="filtroTop10 = 'NO_TOP10'">Fuera</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Orden:</span>
+        <div class="filter-buttons">
+          <button [class.active]="ordenamiento === 'userId'" (click)="cambiarOrden('userId')">Usuario</button>
+          <button [class.active]="ordenamiento === 'pnlTotal'" (click)="cambiarOrden('pnlTotal')">PnL</button>
+          <button [class.active]="ordenamiento === 'diasConTrades'" (click)="cambiarOrden('diasConTrades')">Trades</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leyenda Inline -->
+    <div class="leyenda-inline">
+      <span class="leyenda-item"><span class="dot positivo"></span>Positivo</span>
+      <span class="leyenda-item"><span class="dot negativo"></span>Negativo</span>
+      <span class="leyenda-item"><span class="dot sin-trades"></span>Sin trades</span>
+      <span class="leyenda-item"><span class="dot sin-datos"></span>Sin datos</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="cargando" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando timelines...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !cargando" class="error-message">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Grid Timeline Responsivo -->
+  <div *ngIf="!cargando && !error && timelines.length > 0" class="timeline-grid-container">
+    <!-- Header del Grid -->
+    <div class="grid-header" [style.gridTemplateColumns]="'minmax(120px, 180px) minmax(100px, 140px) repeat(' + fechas.length + ', minmax(40px, 1fr))'">
+      <div class="header-cell agente-header">Agente</div>
+      <div class="header-cell resumen-header">Resumen</div>
+      <div class="header-cell fecha-header" *ngFor="let fecha of fechas">
+        {{ formatearFechaCorta(fecha) }}
+      </div>
+    </div>
+
+    <!-- Body del Grid con scroll vertical -->
+    <div class="grid-body">
+      <div
+        class="grid-row"
+        *ngFor="let timeline of timelinesFiltrados; let i = index"
+        [class.even]="i % 2 === 0"
+        [style.gridTemplateColumns]="'minmax(120px, 180px) minmax(100px, 140px) repeat(' + fechas.length + ', minmax(40px, 1fr))'"
+      >
+        <!-- Columna Agente -->
+        <div class="cell agente-cell">
+          <span class="agente-id">{{ timeline.userId }}</span>
+          <span class="agente-symbol">{{ timeline.symbol }}</span>
+        </div>
+
+        <!-- Columna Resumen -->
+        <div class="cell resumen-cell">
+          <div class="resumen-item">
+            <span class="resumen-label">PnL Total:</span>
+            <span
+              class="pnl-value"
+              [class.positivo]="timeline.resumen.pnlAcumulado >= 0"
+              [class.negativo]="timeline.resumen.pnlAcumulado < 0"
+            >
+              {{ formatearMonedaCorta(timeline.resumen.pnlAcumulado) }}
+            </span>
+          </div>
+          <div class="resumen-item">
+            <span class="resumen-label">Trades:</span>
+            <span class="trades-count">{{ timeline.resumen.diasConTrades }}d</span>
+          </div>
+        </div>
+
+        <!-- Celdas de días -->
+        <div
+          class="cell dia-cell"
+          *ngFor="let fecha of fechas"
+          [ngClass]="obtenerClaseDia(obtenerDia(timeline, fecha))"
+          (mouseenter)="obtenerDia(timeline, fecha) && mostrarTooltip($event, timeline, obtenerDia(timeline, fecha)!)"
+          (mouseleave)="ocultarTooltip()"
+        >
+          <span class="roi-mini" *ngIf="obtenerDia(timeline, fecha)?.tieneTrades">
+            {{ obtenerDia(timeline, fecha)!.roiDia >= 0 ? '+' : '' }}{{ obtenerDia(timeline, fecha)!.roiDia | number:'1.0-0' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen inferior -->
+    <div class="grid-footer">
+      <span>{{ timelinesFiltrados.length }} agentes</span>
+      <span>{{ fechas.length }} días</span>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div *ngIf="diaSeleccionado" class="tooltip-overlay" [style.left.px]="tooltipPosition.x" [style.top.px]="tooltipPosition.y">
+    <div class="tooltip-content">
+      <div class="tooltip-header">
+        <h3>{{ diaSeleccionado.agente.userId }} - {{ diaSeleccionado.agente.symbol }}</h3>
+        <p class="fecha">{{ formatearFechaCompleta(diaSeleccionado.dia.fecha) }}</p>
+      </div>
+
+      <div class="tooltip-body">
+        <div class="tooltip-stat">
+          <span class="label">PnL:</span>
+          <span
+            class="value"
+            [class.positivo]="diaSeleccionado.dia.pnlTotal >= 0"
+            [class.negativo]="diaSeleccionado.dia.pnlTotal < 0"
+          >
+            {{ formatearMoneda(diaSeleccionado.dia.pnlTotal) }}
+          </span>
+        </div>
+
+        <div class="tooltip-stat">
+          <span class="label">ROI Día:</span>
+          <span
+            class="value"
+            [class.positivo]="diaSeleccionado.dia.roiDia >= 0"
+            [class.negativo]="diaSeleccionado.dia.roiDia < 0"
+          >
+            {{ formatearPorcentaje(diaSeleccionado.dia.roiDia) }}
+          </span>
+        </div>
+
+        <div class="tooltip-stat">
+          <span class="label">Balance Inicial:</span>
+          <span class="value">{{ formatearMoneda(diaSeleccionado.dia.balanceInicial) }}</span>
+        </div>
+
+        <div class="tooltip-stat">
+          <span class="label">Balance Final:</span>
+          <span class="value">{{ formatearMoneda(diaSeleccionado.dia.balanceFinal) }}</span>
+        </div>
+
+        <div class="tooltip-stat">
+          <span class="label">Trades:</span>
+          <span class="value">{{ diaSeleccionado.dia.cantidadTrades }}</span>
+        </div>
+
+        <div class="tooltip-stat">
+          <span class="label">Estado:</span>
+          <span class="value badge" [class]="'badge-' + diaSeleccionado.dia.estadoAgente.toLowerCase()">
+            {{ diaSeleccionado.dia.estadoAgente }}
+          </span>
+        </div>
+
+        <div class="tooltip-stat" *ngIf="diaSeleccionado.dia.estaEnTop10">
+          <span class="label">Posición TOP10:</span>
+          <span class="value">#{{ diaSeleccionado.dia.posicionRanking }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

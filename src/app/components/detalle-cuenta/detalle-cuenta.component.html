@@ -1,0 +1,164 @@
+<div class="detalle-cuenta-container">
+  <header class="detalle-header">
+    <div class="header-actions">
+      <button routerLink="/dashboard" class="btn-back">← Volver al Dashboard</button>
+    </div>
+
+    <div *ngIf="cuenta" class="cuenta-info-principal">
+      <h1>{{ cuenta.cuenta_id }}</h1>
+      <div class="estado-badge" [ngClass]="'estado-' + cuenta.estado.toLowerCase()">
+        {{ cuenta.estado }}
+      </div>
+      <div class="hipotesis-badge">
+        TOP {{ cuenta.hipotesis }}
+      </div>
+    </div>
+  </header>
+
+  <div *ngIf="cargando" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando informacion de la cuenta...</p>
+  </div>
+
+  <div *ngIf="error && !cargando" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="cargarDatos()" class="btn-retry">Reintentar</button>
+  </div>
+
+  <div *ngIf="!cargando && !error && cuenta" class="detalle-content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Balance Inicial</h3>
+        <p class="stat-value">{{ formatearMoneda(cuenta.balanceInicial) }}</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Balance Actual</h3>
+        <p class="stat-value">{{ formatearMoneda(cuenta.balanceActual) }}</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>ROI Acumulado</h3>
+        <p class="stat-value" [ngClass]="obtenerClaseROI(cuenta.roiAcumulado)">
+          {{ formatearPorcentaje(cuenta.roiAcumulado) }}
+        </p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Ganancia/Perdida</h3>
+        <p class="stat-value" [ngClass]="obtenerClaseROI(cuenta.balanceActual - cuenta.balanceInicial)">
+          {{ formatearMoneda(cuenta.balanceActual - cuenta.balanceInicial) }}
+        </p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Agente Actual</h2>
+
+      <div class="agente-actual-card">
+        <div class="agente-header">
+          <div class="agente-nombre">
+            <strong>{{ cuenta.agenteActual.userId }}</strong>
+            <span class="symbol-badge">{{ cuenta.agenteActual.symbol }}</span>
+          </div>
+          <div class="agente-roi" [ngClass]="obtenerClaseROI(cuenta.agenteActual.roiConEsteAgente)">
+            ROI: {{ formatearPorcentaje(cuenta.agenteActual.roiConEsteAgente) }}
+          </div>
+        </div>
+
+        <div class="agente-detalles">
+          <div class="detalle-item">
+            <span class="label">Fecha Matrimonio:</span>
+            <span class="value">{{ formatearFecha(cuenta.agenteActual.fechaMatrimonio) }}</span>
+          </div>
+          <div class="detalle-item">
+            <span class="label">Balance al Casarse:</span>
+            <span class="value">{{ formatearMoneda(cuenta.agenteActual.balanceAlCasarse) }}</span>
+          </div>
+          <div class="detalle-item">
+            <span class="label">Dias Casados:</span>
+            <span class="value">{{ cuenta.agenteActual.diasCasados || 0 }} dias</span>
+          </div>
+          <div class="detalle-item">
+            <span class="label">Ganancia con este Agente:</span>
+            <span class="value" [ngClass]="obtenerClaseROI(cuenta.balanceActual - cuenta.agenteActual.balanceAlCasarse)">
+              {{ formatearMoneda(cuenta.balanceActual - cuenta.agenteActual.balanceAlCasarse) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" *ngIf="cuenta.historialMatrimonios && cuenta.historialMatrimonios.length > 0">
+      <h2>Historial de Matrimonios ({{ cuenta.historialMatrimonios.length }})</h2>
+
+      <div class="matrimonios-lista">
+        <div
+          *ngFor="let matrimonio of cuenta.historialMatrimonios; let i = index"
+          class="matrimonio-item"
+          [ngClass]="obtenerEstiloDivorcio(matrimonio.motivoDivorcio)"
+        >
+          <div class="matrimonio-header">
+            <div class="matrimonio-numero">#{{ cuenta.historialMatrimonios.length - i }}</div>
+            <div class="matrimonio-agente">
+              <strong>{{ matrimonio.userId }}</strong>
+              <span class="symbol-badge">{{ matrimonio.symbol }}</span>
+            </div>
+            <div class="matrimonio-roi" [ngClass]="obtenerClaseROI(matrimonio.roiGenerado)">
+              ROI: {{ formatearPorcentaje(matrimonio.roiGenerado) }}
+            </div>
+          </div>
+
+          <div class="matrimonio-detalles">
+            <div class="timeline">
+              <div class="timeline-item">
+                <span class="timeline-label">Matrimonio:</span>
+                <span class="timeline-value">{{ formatearFecha(matrimonio.fechaMatrimonio) }}</span>
+              </div>
+              <div class="timeline-arrow">→</div>
+              <div class="timeline-item">
+                <span class="timeline-label">Divorcio:</span>
+                <span class="timeline-value">{{ formatearFecha(matrimonio.fechaDivorcio) }}</span>
+              </div>
+            </div>
+
+            <div class="balances">
+              <div class="balance-item">
+                <span class="label">Balance al Casarse:</span>
+                <span class="value">{{ formatearMoneda(matrimonio.balanceAlCasarse) }}</span>
+              </div>
+              <div class="balance-item">
+                <span class="label">Balance al Divorciarse:</span>
+                <span class="value">{{ formatearMoneda(matrimonio.balanceAlDivorciarse) }}</span>
+              </div>
+              <div class="balance-item">
+                <span class="label">Ganancia/Perdida:</span>
+                <span class="value" [ngClass]="obtenerClaseROI(matrimonio.balanceAlDivorciarse - matrimonio.balanceAlCasarse)">
+                  {{ formatearMoneda(matrimonio.balanceAlDivorciarse - matrimonio.balanceAlCasarse) }}
+                </span>
+              </div>
+              <div class="balance-item">
+                <span class="label">Dias Casados:</span>
+                <span class="value">
+                  {{ matrimonio.diasCasados || 0 }} dias
+                </span>
+              </div>
+            </div>
+
+            <div class="divorcio-motivo">
+              <span class="motivo-label">Motivo de Divorcio:</span>
+              <span class="motivo-valor">{{ matrimonio.motivoDivorcio }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" *ngIf="!cuenta.historialMatrimonios || cuenta.historialMatrimonios.length === 0">
+      <h2>Historial de Matrimonios</h2>
+      <div class="empty-state">
+        <p>Esta cuenta no tiene matrimonios anteriores. El agente actual es el primero.</p>
+      </div>
+    </div>
+  </div>
+</div>

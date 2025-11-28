@@ -1,0 +1,119 @@
+<div class="timeline-container">
+  <header class="timeline-header">
+    <h1>Timeline de Eventos - TOP10</h1>
+    <p class="subtitle">Historial de cambios en el ranking</p>
+  </header>
+
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Hipotesis:</label>
+      <button
+        *ngFor="let h of hipotesisOpciones"
+        [class.active]="hipotesisActual === h"
+        (click)="cambiarHipotesis(h)"
+        class="btn-filtro"
+      >
+        TOP {{ h }}
+      </button>
+    </div>
+
+    <div class="filtro-grupo">
+      <label>Tipo de Evento:</label>
+      <button
+        *ngFor="let tipo of tiposEvento"
+        [class.active]="tipoFiltro === tipo"
+        (click)="cambiarFiltroTipo(tipo)"
+        class="btn-filtro"
+      >
+        {{ tipo }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="cargando" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando eventos...</p>
+  </div>
+
+  <div *ngIf="error && !cargando" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="cargarEventos()" class="btn-retry">Reintentar</button>
+  </div>
+
+  <div *ngIf="!cargando && !error" class="timeline-content">
+    <div class="timeline-info">
+      <p>Mostrando {{ eventos.length }} de {{ total }} eventos</p>
+    </div>
+
+    <div *ngIf="eventos.length === 0" class="empty-state">
+      <p>No hay eventos para mostrar con los filtros seleccionados</p>
+    </div>
+
+    <div *ngIf="eventos.length > 0" class="timeline">
+      <div
+        *ngFor="let evento of eventos"
+        class="evento-item"
+        [ngClass]="obtenerClaseEvento(evento.tipo)"
+      >
+        <div class="evento-icono">
+          <span class="icono">{{ obtenerIconoEvento(evento.tipo) }}</span>
+        </div>
+
+        <div class="evento-contenido">
+          <div class="evento-header">
+            <span class="evento-tipo">{{ evento.tipo }}</span>
+            <span class="evento-fecha">{{ formatearFecha(evento.fecha) }}</span>
+          </div>
+
+          <div class="evento-detalles">
+            <div class="agente-info">
+              <strong>Agente:</strong> {{ evento.agenteAfectado.userId }} ({{ evento.agenteAfectado.symbol }})
+              <br>
+              <span class="roi">ROI: {{ formatearPorcentaje(evento.agenteAfectado.roiHipotesis) }}</span>
+            </div>
+
+            <div *ngIf="evento.tipo === 'EXPULSION'" class="expulsion-info">
+              <p class="regla-violada">Regla violada: {{ evento.reglaViolada }}</p>
+              <div *ngIf="evento.agenteReemplazo" class="reemplazo">
+                <strong>Reemplazado por:</strong>
+                {{ evento.agenteReemplazo.userId }} ({{ evento.agenteReemplazo.symbol }})
+                <br>
+                <span class="posicion">Posicion: {{ evento.agenteReemplazo.posicionNueva }}</span>
+                <span class="roi">ROI: {{ formatearPorcentaje(evento.agenteReemplazo.roiHipotesis) }}</span>
+              </div>
+            </div>
+
+            <div *ngIf="evento.tipo === 'REINGRESO'" class="reingreso-info">
+              <div *ngIf="evento.agenteSaliente" class="saliente">
+                <strong>Salio:</strong>
+                {{ evento.agenteSaliente.userId }} ({{ evento.agenteSaliente.symbol }})
+                <br>
+                <span class="posicion">Posicion anterior: {{ evento.agenteSaliente.posicionAnterior }}</span>
+                <span class="roi">ROI: {{ formatearPorcentaje(evento.agenteSaliente.roiHipotesis) }}</span>
+              </div>
+              <div class="nuevo-ingreso">
+                <strong>Nueva posicion:</strong> {{ evento.agenteAfectado.posicionNueva }}
+              </div>
+            </div>
+
+            <div *ngIf="evento.tipo === 'CAMBIO_POSICION'" class="cambio-info">
+              <span class="posiciones">
+                Posicion {{ evento.agenteAfectado.posicionAnterior }} → {{ evento.agenteAfectado.posicionNueva }}
+              </span>
+            </div>
+
+            <div *ngIf="evento.razon" class="razon">
+              <em>{{ evento.razon }}</em>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eventos.length < total" class="load-more">
+      <button (click)="cargarMas()" class="btn-primary">
+        Cargar mas eventos
+      </button>
+    </div>
+  </div>
+</div>
